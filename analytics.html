@@ -1,0 +1,268 @@
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — S.sensor</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .analytics { padding: 2rem 4rem 5rem; max-width: 1400px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 2.5rem; }
+    .page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; }
+    .page-title span { color: var(--green-accent); }
+    .page-subtitle { color: rgba(255,255,255,0.45); font-size: 0.88rem; margin-top: 0.3rem; }
+
+    /* Period selector */
+    .period-bar { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .period-btn {
+      padding: 0.5rem 1.2rem; border-radius: 50px; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: transparent;
+      color: rgba(255,255,255,0.5); transition: var(--transition);
+    }
+    .period-btn.active { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); color: var(--green-accent); }
+
+    /* KPI row */
+    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 1.25rem; transition: var(--transition); }
+    .kpi-card:hover { border-color: rgba(34,197,94,0.4); transform: translateY(-2px); }
+    .kpi-label { font-size: 0.72rem; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+    .kpi-val { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; color: var(--white); line-height: 1; }
+    .kpi-val span { font-size: 0.9rem; color: var(--green-accent); }
+    .kpi-change { font-size: 0.75rem; margin-top: 0.3rem; }
+    .up { color: var(--green-accent); } .down { color: #f87171; }
+
+    /* Chart grid */
+    .charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .charts-grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+
+    .a-chart-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 1.75rem; }
+    .a-chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.2rem; }
+    .a-chart-sub { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 1.25rem; }
+    .chart-wrap { position: relative; height: 220px; }
+    .chart-wrap-sm { position: relative; height: 180px; }
+
+    /* Table */
+    .history-table { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; }
+    .table-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.75rem; border-bottom: 1px solid var(--card-border); }
+    .table-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .table-export { font-size: 0.8rem; color: var(--green-accent); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; }
+    table { width: 100%; border-collapse: collapse; }
+    th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem 1.75rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    td { padding: 0.85rem 1.75rem; font-size: 0.88rem; color: rgba(255,255,255,0.75); border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(34,197,94,0.03); }
+    .td-good { color: var(--green-accent); font-weight: 600; }
+    .td-warn { color: #f59e0b; font-weight: 600; }
+    .td-badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 50px; font-size: 0.72rem; font-weight: 700; }
+    .td-badge.done { background: rgba(34,197,94,0.12); color: var(--green-accent); border: 1px solid rgba(34,197,94,0.25); }
+    .td-badge.skip { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+
+    /* Efficiency gauge */
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 1rem 0; }
+    .gauge-circle { position: relative; width: 140px; height: 140px; }
+    .gauge-svg { transform: rotate(-90deg); }
+    .gauge-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 12; }
+    .gauge-fill { fill: none; stroke: var(--green-accent); stroke-width: 12; stroke-linecap: round; stroke-dasharray: 345; stroke-dashoffset: 86; transition: stroke-dashoffset 1s ease; }
+    .gauge-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .gauge-num { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.7rem; color: var(--white); }
+    .gauge-pct { font-size: 0.8rem; color: var(--green-accent); font-weight: 600; }
+    .gauge-label { text-align: center; margin-top: 0.75rem; font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+
+    @media (max-width: 1200px) {
+      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+      .charts-grid-2, .charts-grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .analytics { padding: 1rem 1.5rem 4rem; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">S<span>.sensor</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="analytics.html" class="active">Analytics</a></li>
+    <li><a href="settings.html">Settings</a></li>
+    <li><a href="login.html" class="nav-cta">Account</a></li>
+  </ul>
+</nav>
+
+<div class="page-content">
+<div class="analytics">
+
+  <div class="page-header anim-1">
+    <div class="page-title">Analytics & <span>Reports</span></div>
+    <div class="page-subtitle">Historical sensor data, water efficiency and crop health trends</div>
+  </div>-->
+
+  
+  <!--<div class="period-bar anim-2">
+    <button class="period-btn" onclick="setPeriod(this,'7d')">Last 7 days</button>
+    <button class="period-btn active" onclick="setPeriod(this,'30d')">Last 30 days</button>
+    <button class="period-btn" onclick="setPeriod(this,'3m')">3 months</button>
+    <button class="period-btn" onclick="setPeriod(this,'6m')">6 months</button>
+    <button class="period-btn" onclick="setPeriod(this,'1y')">1 year</button>
+  </div>
+
+  
+  <div class="kpi-row anim-3">
+    <div class="kpi-card">
+      <div class="kpi-label">Total water used</div>
+      <div class="kpi-val">284 <span>L/m²</span></div>
+      <div class="kpi-change down">↓ 18% vs last period</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg soil humidity</div>
+      <div class="kpi-val">71 <span>%</span></div>
+      <div class="kpi-change up">↑ 5% vs last period</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Irrigation cycles</div>
+      <div class="kpi-val">42</div>
+      <div class="kpi-change down">↓ 8 cycles</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Water efficiency</div>
+      <div class="kpi-val">75 <span>%</span></div>
+      <div class="kpi-change up">↑ 12% improvement</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Est. water saved</div>
+      <div class="kpi-val">63 <span>L/m²</span></div>
+      <div class="kpi-change up">↑ vs manual irrigation</div>
+    </div>
+  </div>
+
+  
+  <div class="charts-grid-2 anim-4">
+    <div class="a-chart-card">
+      <div class="a-chart-title">Soil Humidity trend</div>
+      <div class="a-chart-sub">Daily average — last 30 days</div>
+      <div class="chart-wrap"><canvas id="humChart"></canvas></div>
+    </div>
+    <div class="a-chart-card">
+      <div class="a-chart-title">Temperature comparison</div>
+      <div class="a-chart-sub">Soil vs Air temperature average</div>
+      <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+    </div>
+  </div>
+
+  
+  <div class="charts-grid-3 anim-5">
+    <div class="a-chart-card">
+      <div class="a-chart-title">Water usage vs Evapotranspiration</div>
+      <div class="a-chart-sub">Weekly totals (L/m²)</div>
+      <div class="chart-wrap"><canvas id="waterChart"></canvas></div>
+    </div>
+    <div class="a-chart-card" style="display:flex;flex-direction:column;">
+      <div class="a-chart-title">Water Efficiency Score</div>
+      <div class="a-chart-sub">AI-calculated for this period</div>
+      <div class="gauge-wrap">
+        <div class="gauge-circle">
+          <svg class="gauge-svg" viewBox="0 0 120 120" width="140" height="140">
+            <circle class="gauge-bg" cx="60" cy="60" r="55"/>
+            <circle class="gauge-fill" cx="60" cy="60" r="55" id="gaugeFill"/>
+          </svg>
+          <div class="gauge-text">
+            <div class="gauge-num">75</div>
+            <div class="gauge-pct">/ 100</div>
+          </div>
+        </div>
+        <div class="gauge-label">Good efficiency — 25% improvement<br>possible with phase optimization</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="history-table anim-6">
+    <div class="table-header">
+      <div class="table-title">📋 Irrigation History</div>
+      <button class="table-export">⬇ Export CSV</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Dose (L/m²)</th>
+          <th>Duration</th>
+          <th>Soil Hum. before</th>
+          <th>Soil Hum. after</th>
+          <th>Trigger</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Apr 11</td><td>06:30</td><td class="td-good">18.4</td><td>35 min</td><td class="td-warn">61%</td><td class="td-good">79%</td><td>Auto</td><td><span class="td-badge done">Done</span></td></tr>
+        <tr><td>Apr 9</td><td>07:00</td><td class="td-good">16.8</td><td>30 min</td><td class="td-warn">63%</td><td class="td-good">77%</td><td>Auto</td><td><span class="td-badge done">Done</span></td></tr>
+        <tr><td>Apr 7</td><td>18:15</td><td class="td-good">20.2</td><td>40 min</td><td class="td-warn">58%</td><td class="td-good">81%</td><td>Manual</td><td><span class="td-badge done">Done</span></td></tr>
+        <tr><td>Apr 5</td><td>06:45</td><td>—</td><td>—</td><td class="td-good">74%</td><td>—</td><td>Auto</td><td><span class="td-badge skip">Skipped</span></td></tr>
+        <tr><td>Apr 3</td><td>07:00</td><td class="td-good">17.5</td><td>32 min</td><td class="td-warn">65%</td><td class="td-good">80%</td><td>Auto</td><td><span class="td-badge done">Done</span></td></tr>
+        <tr><td>Apr 1</td><td>19:00</td><td class="td-good">19.1</td><td>37 min</td><td class="td-warn">60%</td><td class="td-good">78%</td><td>Manual</td><td><span class="td-badge done">Done</span></td></tr>
+        <tr><td>Mar 30</td><td>06:30</td><td class="td-good">15.9</td><td>28 min</td><td class="td-warn">66%</td><td class="td-good">76%</td><td>Auto</td><td><span class="td-badge done">Done</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  <div class="footer-logo">S<span>.sensor</span></div>
+  <ul class="footer-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="analytics.html">Analytics</a></li>
+    <li><a href="settings.html">Settings</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 S.sensor</div>
+</footer>
+
+<script>
+  const days30 = Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return (d.getMonth()+1)+'/'+d.getDate();});
+  const weeks = ['W1','W2','W3','W4','W5','W6','W7','W8'];
+
+  function makeChart(id, type, labels, datasets, opts={}) {
+    return new Chart(document.getElementById(id).getContext('2d'), {
+      type, data:{labels, datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ color:'rgba(255,255,255,0.5)', boxWidth:12, font:{family:'DM Sans',size:11} } } },
+        scales:{
+          x:{ ticks:{color:'rgba(255,255,255,0.3)',font:{size:10},maxTicksLimit:8}, grid:{color:'rgba(255,255,255,0.04)'} },
+          y:{ ticks:{color:'rgba(255,255,255,0.3)',font:{size:10}}, grid:{color:'rgba(255,255,255,0.06)'} }
+        },
+        ...opts
+      }
+    });
+  }
+
+  function rnd(b,r,n){return Array.from({length:n},()=>+(b+(Math.random()-.5)*r*2).toFixed(1));}
+
+  makeChart('humChart','line',days30,[
+    {label:'Soil Humidity %',data:rnd(70,12,30),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.08)',tension:0.4,pointRadius:0,borderWidth:2,fill:true},
+  ]);
+
+  makeChart('tempChart','line',days30,[
+    {label:'Soil Temp °C',data:rnd(23,5,30),borderColor:'#f59e0b',backgroundColor:'transparent',tension:0.4,pointRadius:0,borderWidth:2},
+    {label:'Air Temp °C',data:rnd(30,6,30),borderColor:'#60a5fa',backgroundColor:'transparent',tension:0.4,pointRadius:0,borderWidth:2},
+  ]);
+
+  makeChart('waterChart','bar',weeks,[
+    {label:'Irrigated (L/m²)',data:[36,0,42,38,0,40,35,32],backgroundColor:'rgba(34,197,94,0.5)',borderColor:'rgba(34,197,94,0.8)',borderWidth:1,borderRadius:6},
+    {label:'Evapotranspiration',data:[28,30,32,28,34,30,27,26],backgroundColor:'rgba(167,139,250,0.35)',borderColor:'rgba(167,139,250,0.7)',borderWidth:1,borderRadius:6},
+  ]);
+
+  function setPeriod(el, period) {
+    document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+  }
+</script>
+</body>
+</html>-->

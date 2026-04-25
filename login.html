@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — S.sensor</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+    .auth-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 70% at 15% 50%, rgba(20,83,45,0.35) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 85% 50%, rgba(34,197,94,0.07) 0%, transparent 60%);
+    }
+
+    .auth-grid {
+      position: fixed; inset: 0; z-index: 0; opacity: 0.025;
+      background-image:
+        linear-gradient(rgba(34,197,94,0.8) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,197,94,0.8) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .auth-wrap {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: 100vh; width: 100%;
+    }
+
+    /* LEFT PANEL */
+    .auth-left {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 4rem; background: rgba(7,26,14,0.6); border-right: 1px solid var(--card-border);
+      position: relative; overflow: hidden;
+    }
+
+    .auth-left-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse 80% 80% at 30% 60%, rgba(34,197,94,0.07) 0%, transparent 70%);
+    }
+
+    .auth-left-content { position: relative; z-index: 1; }
+
+    .auth-brand {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2rem;
+      color: var(--green-accent); margin-bottom: 0.5rem; letter-spacing: -0.03em;
+    }
+    .auth-brand span { color: rgba(255,255,255,0.4); font-weight: 400; }
+
+    .auth-tagline {
+      font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.1;
+      margin: 2.5rem 0 1.25rem;
+    }
+    .auth-tagline .acc { color: var(--green-accent); }
+
+    .auth-desc { color: rgba(255,255,255,0.5); font-size: 1rem; line-height: 1.75; max-width: 380px; margin-bottom: 2.5rem; }
+
+    .auth-features { display: flex; flex-direction: column; gap: 0.9rem; }
+    .auth-feature { display: flex; align-items: center; gap: 0.85rem; }
+    .auth-feature-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);
+      display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+    }
+    .auth-feature-text { font-size: 0.9rem; color: rgba(255,255,255,0.65); }
+
+    /* RIGHT PANEL */
+    .auth-right {
+      display: flex; align-items: center; justify-content: center;
+      padding: 3rem 4rem;
+    }
+
+    .auth-form-wrap { width: 100%; max-width: 400px; }
+
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 2.5rem; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; border: 1px solid rgba(255,255,255,0.08); }
+    .auth-tab {
+      flex: 1; padding: 0.65rem; text-align: center; cursor: pointer;
+      border-radius: 8px; font-size: 0.88rem; font-weight: 600;
+      border: none; background: transparent; color: rgba(255,255,255,0.4);
+      transition: var(--transition);
+    }
+    .auth-tab.active { background: rgba(34,197,94,0.15); color: var(--green-accent); border: 1px solid rgba(34,197,94,0.3); }
+
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .auth-form-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem; margin-bottom: 0.3rem; }
+    .auth-form-sub { color: rgba(255,255,255,0.45); font-size: 0.88rem; margin-bottom: 2rem; }
+
+    .auth-submit { width: 100%; justify-content: center; margin-top: 0.5rem; padding: 0.9rem; font-size: 1rem; }
+
+    .auth-divider {
+      display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0;
+      color: rgba(255,255,255,0.25); font-size: 0.8rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.08);
+    }
+
+    .auth-social { display: flex; gap: 0.75rem; }
+    .auth-social-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.65rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7); cursor: pointer; transition: var(--transition);
+    }
+    .auth-social-btn:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); }
+
+    .auth-footer-text { text-align: center; margin-top: 1.75rem; font-size: 0.82rem; color: rgba(255,255,255,0.35); }
+    .auth-footer-text a { color: var(--green-accent); text-decoration: none; }
+
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .form-input { padding-right: 2.5rem; }
+    .input-icon {
+      position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.3); cursor: pointer; font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .auth-wrap { grid-template-columns: 1fr; }
+      .auth-left { display: none; }
+      .auth-right { padding: 2rem 1.5rem; align-items: flex-start; padding-top: 6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-bg"></div>
+<div class="auth-grid"></div>
+
+<div class="auth-wrap">
+
+  <!-- LEFT -->
+  <div class="auth-left">
+    <div class="auth-left-bg"></div>
+    <div class="auth-left-content anim-1">
+      <div class="auth-brand">S<span>.sensor</span></div>
+      <h2 class="auth-tagline">Irrigate with<br><span class="acc">intelligence.</span></h2>
+      <p class="auth-desc">Connect your soil sensor and get real-time data, AI-powered irrigation recommendations, and full crop control — right from your smartphone.</p>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">💧</div>
+          <div class="auth-feature-text">Real-time soil moisture & temperature</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🧠</div>
+          <div class="auth-feature-text">AI-calculated optimal irrigation dose</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">📱</div>
+          <div class="auth-feature-text">Control everything from your phone</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">⚠️</div>
+          <div class="auth-feature-text">Instant alerts before crop stress</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="auth-right">
+    <div class="auth-form-wrap anim-2">
+
+      <!-- TABS -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchForm(this,'login')">Sign In</button>
+        <button class="auth-tab" onclick="switchForm(this,'register')">Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form active" id="form-login">
+        <div class="auth-form-title">Welcome back</div>
+        <div class="auth-form-sub">Sign in to your S.sensor account</div>
+
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-icon-wrap">
+            <input class="form-input" type="password" id="loginPwd" placeholder="••••••••" />
+            <span class="input-icon" onclick="togglePwd('loginPwd', this)">👁</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:1.25rem;">
+          <a href="#" style="font-size:0.83rem;color:var(--green-accent);text-decoration:none;">Forgot password?</a>
+        </div>
+        <button class="btn btn-primary auth-submit" onclick="handleLogin()">Sign In →</button>
+
+        <div class="auth-divider">or continue with</div>
+        <div class="auth-social">
+          <button class="auth-social-btn">🌐 Google</button>
+          <button class="auth-social-btn">🍎 Apple</button>
+        </div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="auth-form" id="form-register">
+        <div class="auth-form-title">Create account</div>
+        <div class="auth-form-sub">Start monitoring your crops today</div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">First name</label>
+            <input class="form-input" placeholder="Ahmed" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last name</label>
+            <input class="form-input" placeholder="Aissaoui" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone number</label>
+          <input class="form-input" type="tel" placeholder="+216 XX XXX XXX" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-icon-wrap">
+            <input class="form-input" type="password" id="regPwd" placeholder="Min. 8 characters" />
+            <span class="input-icon" onclick="togglePwd('regPwd', this)">👁</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div style="display:flex;align-items:flex-start;gap:0.6rem;margin-top:0.25rem;">
+            <input type="checkbox" id="terms" style="margin-top:3px;accent-color:var(--green-accent);" />
+            <label for="terms" style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.5;">
+              I agree to the <a href="#" style="color:var(--green-accent);">Terms of Service</a> and <a href="#" style="color:var(--green-accent);">Privacy Policy</a>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-primary auth-submit" onclick="handleRegister()">Create Account →</button>
+
+        <div class="auth-divider">or continue with</div>
+        <div class="auth-social">
+          <button class="auth-social-btn">🌐 Google</button>
+          <button class="auth-social-btn">🍎 Apple</button>
+        </div>
+      </div>
+
+      <div class="auth-footer-text">
+        <a href="index.html">← Back to homepage</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchForm(el, id) {
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('form-'+id).classList.add('active');
+  }
+
+  function togglePwd(id, icon) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    icon.textContent = inp.type === 'password' ? '👁' : '🙈';
+  }
+
+  async function handleLogin() {
+    const email = document.querySelector('#form-login input[type="email"]').value;
+    const password = document.querySelector('#form-login input[type="password"]').value;
+
+    try {
+        const res = await fetch('http://127.0.0.1:8000/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify({ email: data.email, full_name: data.full_name }));
+            window.location.href = 'dashboard.html';
+        } else {
+            alert('❌ ' + data.detail);
+        }
+    } catch(e) {
+        alert('❌ Could not connect to server');
+    }
+}
+
+  async function handleRegister() {
+    const email = document.querySelector('#form-register input[type="email"]').value;
+    const password = document.querySelector('#form-register input[type="password"]').value;
+    const full_name = document.querySelector('#form-register input[placeholder="Ahmed"]').value;
+
+    try {
+        const res = await fetch('http://127.0.0.1:8000/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, full_name })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify({ email: data.email, full_name: data.full_name }));
+            window.location.href = 'dashboard.html';
+        } else {
+            alert('❌ ' + data.detail);
+        }
+    } catch(e) {
+        alert('❌ Could not connect to server');
+    }
+}
+</script>
+</body>
+</html>

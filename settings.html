@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — S.sensor</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .settings-page { padding: 2rem 4rem 5rem; max-width: 1100px; margin: 0 auto; }
+    .page-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.8rem; margin-bottom: 0.3rem; }
+    .page-title span { color: var(--green-accent); }
+    .page-sub { color: rgba(255,255,255,0.4); font-size: 0.88rem; margin-bottom: 2.5rem; }
+
+    /* Tabs */
+    .settings-tabs { display: flex; gap: 0.4rem; margin-bottom: 2.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0; }
+    .stab {
+      padding: 0.7rem 1.5rem; cursor: pointer; background: none; border: none;
+      color: rgba(255,255,255,0.45); font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+      font-weight: 500; transition: var(--transition); border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .stab.active { color: var(--green-accent); border-bottom-color: var(--green-accent); }
+    .stab:hover:not(.active) { color: rgba(255,255,255,0.75); }
+
+    /* Panels */
+    .stab-panel { display: none; }
+    .stab-panel.active { display: block; }
+
+    /* Section block */
+    .settings-block { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); padding: 2rem; margin-bottom: 1.5rem; }
+    .block-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.35rem; }
+    .block-sub { color: rgba(255,255,255,0.4); font-size: 0.83rem; margin-bottom: 1.75rem; }
+
+    .grid-2-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+    /* Sensor card */
+    .sensor-card {
+      display: flex; align-items: center; gap: 1.25rem;
+      background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 14px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+    }
+    .sensor-card-icon { font-size: 2rem; flex-shrink: 0; }
+    .sensor-card-name { font-weight: 700; font-size: 0.95rem; }
+    .sensor-card-meta { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin-top: 0.2rem; }
+    .sensor-card-actions { margin-left: auto; display: flex; gap: 0.6rem; }
+    .sensor-status-badge { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: var(--green-accent); font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: 50px; }
+    .sensor-status-badge.offline { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.35); }
+
+    /* Threshold row */
+    .threshold-row { display: flex; align-items: center; gap: 1.5rem; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .threshold-row:last-child { border-bottom: none; }
+    .threshold-label { flex: 1; font-size: 0.88rem; }
+    .threshold-label small { display: block; color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 0.15rem; }
+    .threshold-input { width: 90px; }
+    .threshold-toggle { flex-shrink: 0; }
+
+    /* Notification row */
+    .notif-row { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .notif-row:last-child { border-bottom: none; }
+    .notif-label { font-size: 0.88rem; }
+    .notif-label small { display: block; color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 0.1rem; }
+
+    /* Save bar */
+    .save-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(7,26,14,0.95); border-top: 1px solid var(--card-border); backdrop-filter: blur(20px); padding: 1rem 4rem; display: flex; justify-content: flex-end; gap: 1rem; align-items: center; transform: translateY(100%); transition: var(--transition); }
+    .save-bar.visible { transform: translateY(0); }
+    .save-msg { color: rgba(255,255,255,0.5); font-size: 0.88rem; margin-right: auto; }
+
+    .success-toast { position: fixed; bottom: 80px; right: 2rem; z-index: 100; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green-light); padding: 0.85rem 1.5rem; border-radius: 12px; font-size: 0.88rem; font-weight: 600; opacity: 0; transform: translateY(10px); transition: var(--transition); pointer-events: none; }
+    .success-toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .settings-page { padding: 1rem 1.5rem 5rem; }
+      .grid-2-form { grid-template-columns: 1fr; }
+      .save-bar { padding: 1rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">S<span>.sensor</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="settings.html" class="active">Settings</a></li>
+    <li><a href="login.html" class="nav-cta">Account</a></li>
+  </ul>
+</nav>
+
+<div class="page-content">
+<div class="settings-page">
+
+  <div class="anim-1">
+    <div class="page-title">⚙️ <span>Settings</span></div>
+    <div class="page-sub">Configure your sensor, field, irrigation rules and notifications</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="settings-tabs anim-2">
+    <button class="stab active" onclick="switchTab(this,'field')">🌾 Field & Crop</button>
+    <button class="stab" onclick="switchTab(this,'sensor')">📡 Sensor</button>
+    <button class="stab" onclick="switchTab(this,'irrigation')">💧 Irrigation Rules</button>
+    <button class="stab" onclick="switchTab(this,'alerts')">🔔 Alerts</button>
+    <button class="stab" onclick="switchTab(this,'account')">👤 Account</button>
+  </div>
+
+  <!-- ── FIELD & CROP ── -->
+  <div class="stab-panel active" id="panel-field">
+    <div class="settings-block anim-3">
+      <div class="block-title">Field Information</div>
+      <div class="block-sub">Basic details about your plot — used to calculate irrigation needs</div>
+      <div class="grid-2-form">
+        <div class="form-group">
+          <label class="form-label">Field name</label>
+          <input class="form-input" value="North Plot A" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Field area (hectares)</label>
+          <input class="form-input" type="number" value="2.4" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Soil type</label>
+          <select class="form-select" onchange="markDirty()">
+            <option>Clay loam</option>
+            <option>Sandy loam</option>
+            <option>Silty clay</option>
+            <option>Sandy</option>
+            <option>Loamy sand</option>
+            <option>Silt loam</option>
+            <option>Clay</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Climate zone</label>
+          <select class="form-select" onchange="markDirty()">
+            <option>Semi-arid</option>
+            <option>Arid</option>
+            <option>Mediterranean</option>
+            <option>Tropical</option>
+            <option>Temperate</option>
+            <option>Humid subtropical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Water availability</label>
+          <select class="form-select" onchange="markDirty()">
+            <option>High</option>
+            <option selected>Medium</option>
+            <option>Low</option>
+            <option>Restricted</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">GPS coordinates (optional)</label>
+          <input class="form-input" placeholder="36.8065° N, 10.1815° E" oninput="markDirty()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-block anim-4">
+      <div class="block-title">Crop Configuration</div>
+      <div class="block-sub">Define your crop and its current growth phase to get accurate irrigation recommendations</div>
+      <div class="grid-2-form">
+        <div class="form-group">
+          <label class="form-label">Crop type</label>
+          <select class="form-select" onchange="markDirty()">
+            <option selected>Wheat</option>
+            <option>Corn (Maize)</option>
+            <option>Tomato</option>
+            <option>Potato</option>
+            <option>Barley</option>
+            <option>Sunflower</option>
+            <option>Cotton</option>
+            <option>Olive</option>
+            <option>Lettuce</option>
+            <option>Pepper</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Growth phase</label>
+          <select class="form-select" onchange="markDirty()">
+            <option>Germination</option>
+            <option>Seedling</option>
+            <option>Vegetative growth</option>
+            <option>Flowering</option>
+            <option selected>Grain fill / Fruiting</option>
+            <option>Maturation</option>
+            <option>Harvest</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Planting date</label>
+          <input class="form-input" type="date" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expected harvest date</label>
+          <input class="form-input" type="date" oninput="markDirty()" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SENSOR ── -->
+  <div class="stab-panel" id="panel-sensor">
+    <div class="settings-block anim-3">
+      <div class="block-title">Connected Sensors</div>
+      <div class="block-sub">Manage your S.sensor devices</div>
+
+      <div class="sensor-card">
+        <div class="sensor-card-icon">📡</div>
+        <div>
+          <div class="sensor-card-name">S.sensor #A1</div>
+          <div class="sensor-card-meta">ID: SSN-2025-A1-004 &nbsp;·&nbsp; Firmware: v2.3.1 &nbsp;·&nbsp; Battery: 87%</div>
+          <div class="sensor-card-meta">Last seen: just now &nbsp;·&nbsp; Signal: 92%</div>
+        </div>
+        <div class="sensor-card-actions">
+          <span class="sensor-status-badge">● Online</span>
+          <button class="btn btn-outline btn-sm">Calibrate</button>
+          <button class="btn btn-danger btn-sm">Remove</button>
+        </div>
+      </div>
+
+      <div class="sensor-card" style="opacity:0.5;">
+        <div class="sensor-card-icon">📡</div>
+        <div>
+          <div class="sensor-card-name">S.sensor #B2 (inactive)</div>
+          <div class="sensor-card-meta">ID: SSN-2025-B2-011 &nbsp;·&nbsp; Firmware: v2.2.0</div>
+          <div class="sensor-card-meta">Last seen: 3 days ago</div>
+        </div>
+        <div class="sensor-card-actions">
+          <span class="sensor-status-badge offline">● Offline</span>
+          <button class="btn btn-outline btn-sm">Reconnect</button>
+        </div>
+      </div>
+
+      <button class="btn btn-outline" style="margin-top:0.75rem;" onclick="alert('Add new sensor — would open pairing flow')">+ Add New Sensor</button>
+    </div>
+
+    <div class="settings-block anim-4">
+      <div class="block-title">Measurement Settings</div>
+      <div class="block-sub">Configure how often the sensor reads and sends data</div>
+      <div class="grid-2-form">
+        <div class="form-group">
+          <label class="form-label">Reading interval</label>
+          <select class="form-select" onchange="markDirty()">
+            <option>Every 1 minute</option>
+            <option selected>Every 5 minutes</option>
+            <option>Every 10 minutes</option>
+            <option>Every 15 minutes</option>
+            <option>Every 30 minutes</option>
+            <option>Every hour</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data transmission</label>
+          <select class="form-select" onchange="markDirty()">
+            <option selected>Real-time (WiFi)</option>
+            <option>Batched (every 30 min)</option>
+            <option>Manual sync only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sensor depth (cm)</label>
+          <input class="form-input" type="number" value="20" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperature unit</label>
+          <select class="form-select" onchange="markDirty()">
+            <option selected>Celsius (°C)</option>
+            <option>Fahrenheit (°F)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IRRIGATION RULES ── -->
+  <div class="stab-panel" id="panel-irrigation">
+    <div class="settings-block anim-3">
+      <div class="block-title">Irrigation System</div>
+      <div class="block-sub">Tell us how you irrigate so we calculate the right dose and duration</div>
+      <div class="grid-2-form">
+        <div class="form-group">
+          <label class="form-label">Irrigation type</label>
+          <select class="form-select" onchange="markDirty()">
+            <option selected>Drip irrigation</option>
+            <option>Sprinkler</option>
+            <option>Flood / Surface</option>
+            <option>Subsurface drip</option>
+            <option>Micro-sprinkler</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flow rate (L/h per m²)</label>
+          <input class="form-input" type="number" value="2.1" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max dose per cycle (L/m²)</label>
+          <input class="form-input" type="number" value="25" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preferred irrigation window</label>
+          <select class="form-select" onchange="markDirty()">
+            <option>Early morning (5–8 AM)</option>
+            <option selected>Morning (6–9 AM)</option>
+            <option>Evening (17–20 PM)</option>
+            <option>Night (20–23 PM)</option>
+            <option>Any time</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-block anim-4">
+      <div class="block-title">Soil Moisture Thresholds</div>
+      <div class="block-sub">Set the trigger and target levels for each metric</div>
+
+      <div class="threshold-row">
+        <div class="threshold-label">
+          Trigger irrigation below
+          <small>Soil humidity % — start irrigating when below this value</small>
+        </div>
+        <input class="form-input threshold-input" type="number" value="65" oninput="markDirty()" />
+        <div class="threshold-toggle">
+          <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+      <div class="threshold-row">
+        <div class="threshold-label">
+          Stop irrigation at
+          <small>Soil humidity % — target soil moisture level</small>
+        </div>
+        <input class="form-input threshold-input" type="number" value="82" oninput="markDirty()" />
+        <div class="threshold-toggle">
+          <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+      <div class="threshold-row">
+        <div class="threshold-label">
+          Pause when soil temp exceeds
+          <small>Soil temperature °C — avoid irrigating in heat stress</small>
+        </div>
+        <input class="form-input threshold-input" type="number" value="35" oninput="markDirty()" />
+        <div class="threshold-toggle">
+          <label class="toggle"><input type="checkbox" onchange="markDirty()"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+      <div class="threshold-row">
+        <div class="threshold-label">
+          Skip when air humidity above
+          <small>Air humidity % — skip if natural moisture is sufficient</small>
+        </div>
+        <input class="form-input threshold-input" type="number" value="85" oninput="markDirty()" />
+        <div class="threshold-toggle">
+          <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ALERTS ── -->
+  <div class="stab-panel" id="panel-alerts">
+    <div class="settings-block anim-3">
+      <div class="block-title">Notification Channels</div>
+      <div class="block-sub">How to receive alerts</div>
+      <div class="notif-row">
+        <div class="notif-label">Push notifications<small>Mobile app alerts (iOS / Android)</small></div>
+        <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-label">Email alerts<small>Sent to your registered email address</small></div>
+        <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-label">SMS alerts<small>Text message for critical alerts only</small></div>
+        <label class="toggle"><input type="checkbox" onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+    </div>
+
+    <div class="settings-block anim-4">
+      <div class="block-title">Alert Events</div>
+      <div class="block-sub">Choose which events trigger notifications</div>
+      <div class="notif-row">
+        <div class="notif-label">Soil moisture below threshold<small>Critical irrigation needed</small></div>
+        <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-label">Irrigation cycle completed<small>After every automated or manual cycle</small></div>
+        <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-label">Sensor offline or battery low<small>Device connectivity issues</small></div>
+        <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-label">Temperature anomaly<small>Unusual soil or air temperature spikes</small></div>
+        <label class="toggle"><input type="checkbox" onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+      <div class="notif-row">
+        <div class="notif-label">Weekly summary report<small>Sent every Monday morning</small></div>
+        <label class="toggle"><input type="checkbox" checked onchange="markDirty()"><div class="toggle-slider"></div></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNT ── -->
+  <div class="stab-panel" id="panel-account">
+    <div class="settings-block anim-3">
+      <div class="block-title">Profile</div>
+      <div class="block-sub">Your personal account information</div>
+      <div class="grid-2-form">
+        <div class="form-group">
+          <label class="form-label">Full name</label>
+          <input class="form-input" value="Ahmed Aissaoui" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" value="ahmed@ssensor.io" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone (for SMS)</label>
+          <input class="form-input" type="tel" placeholder="+216 XX XXX XXX" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <select class="form-select" onchange="markDirty()">
+            <option selected>English</option>
+            <option>Français</option>
+            <option>العربية</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-block anim-4">
+      <div class="block-title">Security</div>
+      <div class="block-sub">Change your password</div>
+      <div style="max-width:420px;">
+        <div class="form-group">
+          <label class="form-label">Current password</label>
+          <input class="form-input" type="password" placeholder="••••••••" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">New password</label>
+          <input class="form-input" type="password" placeholder="••••••••" oninput="markDirty()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm new password</label>
+          <input class="form-input" type="password" placeholder="••••••••" oninput="markDirty()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-block" style="border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.04);">
+      <div class="block-title" style="color:#f87171;">Danger Zone</div>
+      <div class="block-sub">These actions are irreversible</div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('Delete all sensor data?')) alert('Data deleted.')">Delete all sensor data</button>
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('Delete account permanently?')) window.location='login.html'">Delete account</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- SAVE BAR -->
+<div class="save-bar" id="saveBar">
+  <div class="save-msg">You have unsaved changes</div>
+  <button class="btn btn-outline btn-sm" onclick="discardChanges()">Discard</button>
+  <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Changes</button>
+</div>
+
+<div class="success-toast" id="toast">✅ Settings saved successfully!</div>
+
+<footer>
+  <div class="footer-logo">S<span>.sensor</span></div>
+  <ul class="footer-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="settings.html">Settings</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 S.sensor</div>
+</footer>
+
+<script>
+  let dirty = false;
+
+  function switchTab(el, id) {
+    document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.stab-panel').forEach(p=>p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-'+id).classList.add('active');
+  }
+
+  function markDirty() {
+    dirty = true;
+    document.getElementById('saveBar').classList.add('visible');
+  }
+
+  function discardChanges() {
+    dirty = false;
+    document.getElementById('saveBar').classList.remove('visible');
+  }
+
+  function saveSettings() {
+    dirty = false;
+    document.getElementById('saveBar').classList.remove('visible');
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
